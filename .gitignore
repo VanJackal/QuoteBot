@@ -1,6 +1,8 @@
 # PROJECT
 *~
 TOKEN
+quotes/
+*.swp
 # GENERIC PYTHON
 # Byte-compiled / optimized / DLL files
 __pycache__/
