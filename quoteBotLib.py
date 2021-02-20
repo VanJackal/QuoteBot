@@ -10,13 +10,12 @@ async def createQuote(message,db):#should be passed a message and will return a 
 
     if not quotes:
         return False
-    quoteID = await getID(db)
 
     quoteDicts = []
     for quote in quotes:
+        quoteID = await getID(db)
         quoteDicts.append(await dictQuote(quote))
-    
-    await speakQuote(quoteDicts[0],quoteID)
+        await speakQuote(quoteDicts[0],quoteID)
 
     return True
 
@@ -49,4 +48,4 @@ async def speakQuote(quoteDict,quoteID):
     tts = gTTS(fullQuote)
     tts.save(f"./Quotes/{quoteID}.mp3")
     
-
+async def dbEntry(message,quoteDict,quoteID)
