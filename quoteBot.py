@@ -3,6 +3,8 @@
 import discord
 from discord.ext import commands
 
+import re
+
 bot = commands.Bot(command_prefix = '$')
 TOKEN = ""
 with open("TOKEN") as f:
@@ -14,7 +16,7 @@ async def on_ready():
 
 @bot.command()
 async def say(ctx):
-    await play(ctx,"./quotes/test.mp3")
+    await play(ctx,"./Quotes/test.mp3")
 
 @bot.command()
 async def leave(ctx):

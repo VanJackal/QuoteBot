@@ -1,8 +1,9 @@
 # PROJECT
 *~
 TOKEN
-quotes/
+Quotes/
 *.swp
+testCode.py
 # GENERIC PYTHON
 # Byte-compiled / optimized / DLL files
 __pycache__/
