@@ -2,6 +2,7 @@
 
 import re
 import pymongo
+from gtts import gTTS
 
 async def createQuote(message,db):#should be passed a message and will return a true or false based on if it contains a valid quote, and will add the quote to the DB
     q = re.compile(r'(".+"(?:\s+-*\s+).+\d{4})')
@@ -9,12 +10,15 @@ async def createQuote(message,db):#should be passed a message and will return a 
 
     if not quotes:
         return False
-    quoteID = getID()
+    quoteID = await getID(db)
 
     quoteDicts = []
     for quote in quotes:
         quoteDicts.append(await dictQuote(quote))
-    return quoteDicts
+    
+    await speakQuote(quoteDicts[0],quoteID)
+
+    return True
 
 async def dictQuote(content):#returns a dict of {quote,quotee,year}, based on a quote string
     content = content.strip()
@@ -30,6 +34,19 @@ async def dictQuote(content):#returns a dict of {quote,quotee,year}, based on a 
             "year":year.group()
             }
 
-async def getID():
-    quoteID = 0
+async def getID(db):
+    db.quotes.update_one({"msgID":"GlobalID"},{"$inc":{"ID":1}})
+    quoteID = db.quotes.find_one({"msgID":"GlobalID"})["ID"]
     return quoteID
+
+async def speakQuote(quoteDict,quoteID):
+    quote = quoteDict["quote"]
+    quotee = quoteDict["quotee"]
+    year = quoteDict["year"]
+
+    fullQuote = f"{quote}. {quotee}, {year}"
+
+    tts = gTTS(fullQuote)
+    tts.save(f"./Quotes/{quoteID}.mp3")
+    
+
