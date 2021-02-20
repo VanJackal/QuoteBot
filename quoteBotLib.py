@@ -37,8 +37,8 @@ async def dictQuote(content):#returns a dict of {quote,quotee,year}, based on a 
             }
 
 async def getID(db):
-    db.quotes.update_one({"msgID":"GlobalID"},{"$inc":{"IDCounter":1}})
-    quoteID = db.quotes.find_one({"msgID":"GlobalID"})["IDCounter"]
+    db.quotes.update_one({"msgID":"GlobalID"},{"$inc":{"IDCount":1}})
+    quoteID = db.quotes.find_one({"msgID":"GlobalID"})["IDCount"]
     return quoteID
 
 async def speakQuote(quoteDict,quoteID):
@@ -83,3 +83,13 @@ async def getTags(quoteDict):
 
 async def getPath(quoteID,db):
     return db.quotes.find_one({"ID":quoteID})["file"]
+
+async def addChannel(serverID,channelID,db):
+    server = db.servers.find_one({"serverID":serverID})
+    if not server:
+        db.servers.insert_one({"serverID":serverID,"channels":[channelID]})
+    elif not server[channels].contains(channelID):
+        db.servers.update_one({"serverID":serverID},{"$push":{"channels":channelID}})
+
+async def checkChannel(serverID,channelID,db):
+    return db.servers.find_one({"serverID":serverID})["channels"].contains(channelID)

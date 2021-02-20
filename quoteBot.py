@@ -31,8 +31,25 @@ async def leave(ctx):
 
 @bot.command()
 async def addquote(ctx, msgID):
-    message = await getMsg(ctx,msgID)
-    await qbLib.createQuote(message,db)
+    quoteChannels = db.servers.find_one({"serverID":ctx.guild.id})["channels"]
+    for channelID in quoteChannels:
+        channel = ctx.guild.get_channel(channelID)
+        message = await channel.fetch_message(msgID)
+        if message:
+            await qbLib.createQuote(message,db)
+            return
+    await ctx.send("Message not in any quote channel.")
+
+@bot.command()
+async def setchannel(ctx):
+    serverID = ctx.guild.id
+    channelID = ctx.channel.id
+    await qbLib.addChannel(serverID,channelID,db)
+    await ctx.send("Added channel to quotes channel list.")
+
+@bot.command()
+async def search(ctx,*tags):
+    entries = list(db.quotes.find({"tags":{"$in":tags}}))
 
 async def play(ctx,path):
     if not ctx.voice_client:
@@ -40,8 +57,5 @@ async def play(ctx,path):
     else:
         vc = ctx.voice_client
     vc.play(discord.FFmpegPCMAudio(path))
-
-async def getMsg(ctx,msgID: int):
-    return await ctx.fetch_message(msgID)
 
 bot.run(TOKEN)
