@@ -15,7 +15,10 @@ async def createQuote(message,db):#should be passed a message and will return a 
     for quote in quotes:
         quoteID = await getID(db)
         quoteDicts.append(await dictQuote(quote))
-        await speakQuote(quoteDicts[0],quoteID)
+        audio = await speakQuote(quoteDicts[0],quoteID)
+        await dbEntry(message,quoteDicts[0],quoteID,audio,db)
+
+    await message.add_reaction(":speaker:")
 
     return True
 
@@ -45,7 +48,35 @@ async def speakQuote(quoteDict,quoteID):
 
     fullQuote = f"{quote}. {quotee}, {year}"
 
+    audio = f"./Quotes/{quoteID}.mp3"
     tts = gTTS(fullQuote)
-    tts.save(f"./Quotes/{quoteID}.mp3")
+    tts.save(audio)
+    return audio
     
-async def dbEntry(message,quoteDict,quoteID)
+async def dbEntry(message,quoteDict,quoteID,audio,db):
+    tags = await getTags(quoteDict)
+    entry = {
+            "msgID":message.id,
+            "server":message.guild.id,
+            "channel":message.channel.id,
+            "quote":quoteDict["quote"],
+            "quotee":quoteDict["quotee"],
+            "year":quoteDict["year"],
+            "file":audio,
+            "tags":tags,
+            "ID":quoteID,
+            "date":int(message.created_at.utcnow().timestamp())
+            }
+    db.quotes.insert_one(entry)
+
+async def getTags(quoteDict):
+    quoteSplit = quoteDict["quote"].lower().split(" ")
+    tags = []
+    for word in quoteSplit:
+        if word not in tags:
+            tags.append(word)
+
+    tags.append(quoteDict["quotee"].lower())
+    tags.append(quoteDict["year"])
+
+    return tags
