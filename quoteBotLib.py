@@ -5,7 +5,7 @@ import pymongo
 from gtts import gTTS
 
 async def createQuote(message,db):#should be passed a message and will return a true or false based on if it contains a valid quote, and will add the quote to the DB
-    q = re.compile(r'(".+"(?:\s+-*\s+).+\d{4})')
+    q = re.compile(r'(".+"(?:\s*-*\s+).+\d{4})')
     quotes = q.findall(message.content)
 
     if not quotes:
@@ -18,7 +18,7 @@ async def createQuote(message,db):#should be passed a message and will return a 
         audio = await speakQuote(quoteDicts[0],quoteID)
         await dbEntry(message,quoteDicts[0],quoteID,audio,db)
 
-    await message.add_reaction(":speaker:")
+    await message.add_reaction("🔈")
 
     return True
 
@@ -37,8 +37,8 @@ async def dictQuote(content):#returns a dict of {quote,quotee,year}, based on a 
             }
 
 async def getID(db):
-    db.quotes.update_one({"msgID":"GlobalID"},{"$inc":{"ID":1}})
-    quoteID = db.quotes.find_one({"msgID":"GlobalID"})["ID"]
+    db.quotes.update_one({"msgID":"GlobalID"},{"$inc":{"IDCounter":1}})
+    quoteID = db.quotes.find_one({"msgID":"GlobalID"})["IDCounter"]
     return quoteID
 
 async def speakQuote(quoteDict,quoteID):
@@ -80,3 +80,6 @@ async def getTags(quoteDict):
     tags.append(quoteDict["year"])
 
     return tags
+
+async def getPath(quoteID,db):
+    return db.quotes.find_one({"ID":quoteID})["file"]
