@@ -5,7 +5,7 @@ import pymongo
 from gtts import gTTS
 
 async def createQuote(message,db):#should be passed a message and will return a true or false based on if it contains a valid quote, and will add the quote to the DB
-    q = re.compile(r'(".+"(?:\s*-*\s+).+\d{4})')
+    q = re.compile(r'([\"\'“”‘’].+[\"\'“”‘’](?:\s*-*\s+).+\d{4})')
     quotes = q.findall(message.content)
 
     if not quotes:
@@ -24,7 +24,7 @@ async def createQuote(message,db):#should be passed a message and will return a 
 
 async def dictQuote(content):#returns a dict of {quote,quotee,year}, based on a quote string
     content = content.strip()
-    quote = re.search(r'((?!").+(?="))',content)
+    quote = re.search(r'((?![\"\'“”‘’]).+(?=[\"\'“”‘’]))',content)
     year = re.search(r'\d{4}$',content)
     quotee = content[quote.end() + 1:year.start()]#grabs string that isnt the date or the main quote content
     quotee = quotee.strip()
@@ -88,8 +88,6 @@ async def addChannel(serverID,channelID,db):
     server = db.servers.find_one({"serverID":serverID})
     if not server:
         db.servers.insert_one({"serverID":serverID,"channels":[channelID]})
-    elif not server[channels].contains(channelID):
+    elif channelID not in server["channels"]:
         db.servers.update_one({"serverID":serverID},{"$push":{"channels":channelID}})
 
-async def checkChannel(serverID,channelID,db):
-    return db.servers.find_one({"serverID":serverID})["channels"].contains(channelID)

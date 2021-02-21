@@ -22,6 +22,15 @@ with open("TOKEN") as f:
 async def on_ready():
     print("Logged in as {0.user}".format(bot))
 
+@bot.event
+async def on_message(message):
+    quoteChannels = db.servers.find_one({"serverID":message.guild.id})["channels"]
+    quoteChannelsInt = []
+    for cID in quoteChannels:
+        quoteChannelsInt.append(int(cID))
+    if message.channel.id in quoteChannelsInt:
+        result = await qbLib.createQuote(message,db)
+
 @bot.command()
 async def say(ctx, quoteID: int):
     await play(ctx,await qbLib.getPath(quoteID,db))
@@ -43,13 +52,14 @@ async def addquote(ctx, msgID):
 
 @bot.command()
 async def setchannel(ctx):
-    if not ctx.message.author.server_permissions.administrator:
+    if not ctx.message.author.guild_permissions.administrator:
         await ctx.send("You must be an admin to do this.")
         return
     serverID = ctx.guild.id
     channelID = ctx.channel.id
     await qbLib.addChannel(serverID,channelID,db)
-    await ctx.send("Added channel to quotes channel list.")
+    await ctx.send("Added channel to quotes channel list. RETROQUOTING!")
+    await retroQuote(ctx)
 
 @bot.command()
 async def search(ctx,*tags):
@@ -70,6 +80,14 @@ async def random(ctx):
     await ctx.send(f"Playing quote #{choiceID}")
     path = await qbLib.getPath(float(choiceID),db)
     await play(ctx,path)
+
+async def retroQuote(ctx):
+    if not ctx.message.author.guild_permissions.administrator:
+        await ctx.send("You must be an admin to do this.")
+        return
+    async for message in ctx.channel.history(limit=500):
+        await qbLib.createQuote(message,db)
+    await ctx.send("*Retroquoteing Done!*")
 
 async def play(ctx,path):
     if not ctx.voice_client:
