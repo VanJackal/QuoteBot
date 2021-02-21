@@ -11,12 +11,11 @@ async def createQuote(message,db):#should be passed a message and will return a 
     if not quotes:
         return False
 
-    quoteDicts = []
     for quote in quotes:
         quoteID = await getID(db)
-        quoteDicts.append(await dictQuote(quote))
-        audio = await speakQuote(quoteDicts[0],quoteID)
-        await dbEntry(message,quoteDicts[0],quoteID,audio,db)
+        quoteDict = await dictQuote(quote)
+        audio = await speakQuote(quoteDict,quoteID)
+        await dbEntry(message,quoteDict,quoteID,audio,db)
 
     await message.add_reaction("🔈")
 
