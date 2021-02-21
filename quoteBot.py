@@ -26,6 +26,7 @@ async def on_ready():
 async def on_message(message):
     server = db.servers.find_one({"serverID":message.guild.id})
     if not server:
+        await bot.process_commands(message)
         return
     quoteChannels = server["channels"]
     quoteChannelsInt = []
@@ -33,6 +34,7 @@ async def on_message(message):
         quoteChannelsInt.append(int(cID))
     if message.channel.id in quoteChannelsInt:
         result = await qbLib.createQuote(message,db)
+    await bot.process_commands(message)
 
 @bot.command()
 async def say(ctx, quoteID: int):
