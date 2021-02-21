@@ -24,9 +24,10 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    quoteChannels = db.servers.find_one({"serverID":message.guild.id})["channels"]
-    if not quoteChannels:
+    server = db.servers.find_one({"serverID":message.guild.id})
+    if not server:
         return
+    quoteChannels = server["channels"]
     quoteChannelsInt = []
     for cID in quoteChannels:
         quoteChannelsInt.append(int(cID))
