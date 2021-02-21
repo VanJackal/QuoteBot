@@ -7,6 +7,7 @@ import re
 import yaml
 import quoteBotLib as qbLib
 import pymongo
+import random as rand
 
 with open("config.yaml") as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
@@ -42,6 +43,9 @@ async def addquote(ctx, msgID):
 
 @bot.command()
 async def setchannel(ctx):
+    if not ctx.message.author.server_permissions.administrator:
+        await ctx.send("You must be an admin to do this.")
+        return
     serverID = ctx.guild.id
     channelID = ctx.channel.id
     await qbLib.addChannel(serverID,channelID,db)
@@ -58,6 +62,14 @@ async def search(ctx,*tags):
         result += template.format(int(entry["ID"]),entry["quote"][:32],entry["quotee"])
     result += "```"
     await ctx.send(result)
+
+@bot.command()
+async def random(ctx):
+    idx = db.quotes.find_one({"msgID":"GlobalID"})["IDCount"]
+    choiceID = rand.randrange(int(idx))
+    await ctx.send(f"Playing quote #{choiceID}")
+    path = await qbLib.getPath(float(choiceID),db)
+    await play(ctx,path)
 
 async def play(ctx,path):
     if not ctx.voice_client:
