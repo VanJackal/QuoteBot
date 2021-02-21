@@ -50,6 +50,14 @@ async def setchannel(ctx):
 @bot.command()
 async def search(ctx,*tags):
     entries = list(db.quotes.find({"tags":{"$in":tags}}))
+    template = "{:<4} | {:<32} | {:<16}\n"
+    result = "```"
+    result += template.format("ID","Quote","Author")
+    result += "-"*5 + "+" + "-"*34 + "+" + "-"*17 + "\n"
+    for entry in entries[:10]:
+        result += template.format(int(entry["ID"]),entry["quote"][:32],entry["quotee"])
+    result += "```"
+    await ctx.send(result)
 
 async def play(ctx,path):
     if not ctx.voice_client:
