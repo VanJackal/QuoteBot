@@ -5,23 +5,30 @@ import pymongo
 from gtts import gTTS
 
 async def createQuote(message,db):#should be passed a message and will return a true or false based on if it contains a valid quote, and will add the quote to the DB
-    q = re.compile(r'([\"\'“”‘’].+[\"\'“”‘’](?:\s*-*\s+).+\d{4})')
-    quotes = q.findall(message.content)
+    q = re.compile(r'(?:[\"\'“”‘’])(?P<quote>.+)(?:[\"\'“”‘’])(?:[\s-]*)(?P<quotee>.+?|$)(?:\s*)(?P<year>\d{4}$|$)')
 
-    if not quotes:
-        return False
+    foundQuote = False
 
-    for quote in quotes:
-        quoteID = await getID(db)
-        quoteDict = await dictQuote(quote)
-        audio = await speakQuote(quoteDict,quoteID)
-        await dbEntry(message,quoteDict,quoteID,audio,db)
+    for quote in message.content.split("\n"):
+        match = q.search(quote)
+        if match:
+            quoteID = await getID(db)
+            quoteDict = match.groupdict()
+            if not quoteDict["quotee"]:
+                quoteDict["quotee"] = "Cheesy Proverb"
+            audio = await speakQuote(quoteDict,quoteID)
+            await dbEntry(message,quoteDict,quoteID,audio,db)
+            foundQuote = True
+        else:
+            pass
 
-    await message.add_reaction("🔈")
+    if foundQuote:
+        await message.add_reaction("🔈")
 
-    return True
+    return foundQuote
 
 async def dictQuote(content):#returns a dict of {quote,quotee,year}, based on a quote string
+    #DEPRECATED
     content = content.strip()
     quote = re.search(r'((?![\"\'“”‘’]).+(?=[\"\'“”‘’]))',content)
     year = re.search(r'\d{4}$',content)
