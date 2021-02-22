@@ -69,6 +69,11 @@ async def setchannel(ctx):
 @bot.command()
 async def search(ctx,*tags):
     entries = list(db.quotes.find({"tags":{"$in":tags}}))
+    if len(tags) == 1:
+        try:
+            entries.append(db.quotes.find_one({"ID":float(tags[0])}))
+        except:
+            pass
     template = "{:<4} | {:<32} | {:<16}\n"
     result = "```"
     result += template.format("ID","Quote","Author")
