@@ -12,7 +12,7 @@ import random as rand
 with open("config.yaml") as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
 dbAddr = config["dbAddress"]
-bot = commands.Bot(command_prefix = '$')
+bot = commands.Bot(command_prefix = config["prefix"])
 dbClient = pymongo.MongoClient(f"mongodb://{dbAddr}/")
 db = dbClient.quoteDB
 with open("TOKEN") as f:
