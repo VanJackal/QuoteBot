@@ -65,10 +65,10 @@ async def setChannel(ctx):
 
 @bot.command()
 async def search(ctx,*tags):
-    entries = list(db.quotes.find({"tags":{"$in":tags}}))
+    entries = await qbLib.search(tags,db)
     if len(tags) == 1:
         try:
-            entries.append(db.quotes.find_one({"ID":float(tags[0])}))
+            entries.append(await qbLib.getQuote(tags[0],db))
         except:
             pass
     template = "{:<4} | {:<32} | {:<16}\n"

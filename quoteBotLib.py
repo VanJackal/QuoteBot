@@ -114,3 +114,9 @@ def isQuoteChannel(message,server):
     for cID in quoteChannels:
         quoteChannelsInt.append(int(cID))
     return message.channel.id in quoteChannelsInt
+
+async def search(tags,db):
+    return list(db.quotes.find({"tags":{"$in":tags}}))
+
+async def getQuote(quoteID,db):
+    return db.quotes.find_one({"ID":float(quoteID)})
