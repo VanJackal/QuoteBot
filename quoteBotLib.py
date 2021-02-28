@@ -97,3 +97,20 @@ async def addChannel(serverID,channelID,db):
     elif channelID not in server["channels"]:
         db.servers.update_one({"serverID":serverID},{"$push":{"channels":channelID}})
 
+async def adminDo(ctx,func):
+    check = ctx.message.author.guild_permissions.administrator
+    if not check:
+        ctx.send("You must be an admin to do this.")
+        return
+    await func(ctx)
+
+async def retroQuote(ctx,db):
+    async for message in ctx.channel.history(limit=500):
+        await createQuote(message,db)
+
+def isQuoteChannel(message,server):
+    quoteChannels = server["channels"]
+    quoteChannelsInt = []#TODO this probably could be done better
+    for cID in quoteChannels:
+        quoteChannelsInt.append(int(cID))
+    return message.channel.id in quoteChannelsInt
