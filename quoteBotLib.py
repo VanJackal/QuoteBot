@@ -3,6 +3,7 @@
 import re
 import pymongo
 from gtts import gTTS
+import string
 
 async def createQuote(message,db):
     """attempts to create a quote from the given message and add it as an entry to the db
@@ -115,13 +116,15 @@ async def getTags(quoteDict):
 
     returns list of tags
     """
-    quoteSplit = quoteDict["quote"].lower().split(" ")
+    quote = quoteDict["quote"].translate(str.maketrans('','',string.punctuation))
+    quoteSplit = quote.lower().split(" ")
     tags = []
     for word in quoteSplit:
+        word = word.strip()
         if word not in tags:
             tags.append(word)
 
-    tags.append(quoteDict["quotee"].lower())
+    tags.append(quoteDict["quotee"].lower().split(" "))
     tags.append(quoteDict["year"])
 
     return tags
