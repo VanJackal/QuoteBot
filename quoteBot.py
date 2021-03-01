@@ -101,6 +101,14 @@ async def retroquote(ctx):
     else:
         await ctx.send("Invalid Channel")
 
+@bot.command()
+async def show(ctx, quoteID: int):
+    quoteDict = await qbLib.getQuote(quoteID,db)
+    quote = quoteDict["quote"]
+    quotee = quoteDict["quotee"]
+    year = quoteDict["year"]
+    await ctx.send(f'Quote #{quoteID}: "{quote}" - {quotee} {year}')
+
 async def play(ctx,path):
     """active function that plays quotes"""
     if not ctx.voice_client:#if bot isnt in a voice channel join authors channel
