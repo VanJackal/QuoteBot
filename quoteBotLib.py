@@ -174,7 +174,7 @@ async def retroQuote(ctx,db):
     async for message in ctx.channel.history(limit=500):
         await createQuote(message,db)
 
-def isQuoteChannel(message,server):#TODO improve this function and change so it doesnt require the server argument
+def isQuoteChannel(message,db):
     """checks if message channel is in the list of channels in the server entry
 
     args:
@@ -182,11 +182,12 @@ def isQuoteChannel(message,server):#TODO improve this function and change so it 
     server -- server object from database
 
     returns -- bool true if channel is in list of quote channels"""
-    quoteChannels = server["channels"]
-    quoteChannelsInt = []#TODO this probably could be done better
-    for cID in quoteChannels:
-        quoteChannelsInt.append(int(cID))
-    return message.channel.id in quoteChannelsInt
+
+    server = db.servers.find_one({"serverID":message.guild.id})
+    if not server:
+        return False
+    quoteChannels = map(int,server["channels"])
+    return message.channel.id in quoteChannels
 
 async def search(tags,db):
     """search database with given tags

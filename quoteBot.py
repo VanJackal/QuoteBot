@@ -25,11 +25,7 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     """on message check if the attempt to quote the message if its in a valid channel"""
-    server = db.servers.find_one({"serverID":message.guild.id})
-    if not server:
-        await bot.process_commands(message)
-        return
-    if qbLib.isQuoteChannel(message,server):
+    if qbLib.isQuoteChannel(message,db):
         await qbLib.createQuote(message,db)
     await bot.process_commands(message)
 
@@ -46,7 +42,7 @@ async def leave(ctx):
 @bot.command()
 async def addquote(ctx, msgID):
     """adds quote from given message id"""
-    quoteChannels = db.servers.find_one({"serverID":ctx.guild.id})["channels"]#TODO switch over to isQuoteChannel method
+    quoteChannels = db.servers.find_one({"serverID":ctx.guild.id})["channels"]
     for channelID in quoteChannels:
         channel = ctx.guild.get_channel(channelID)
         message = await channel.fetch_message(msgID)
