@@ -91,6 +91,15 @@ async def random(ctx):
     await ctx.send(f"Playing quote #{choiceID}")
     path = await qbLib.getPath(float(choiceID),db)
     await play(ctx,path)
+    
+@bot.command()
+async def retroquote(ctx):
+    if qbLib.isQuoteChannel(ctx.message,db):
+        await ctx.send("Retroquoting!")
+        await qbLib.retroQuote(ctx,db)
+        await ctx.send("Retroquoting done!")
+    else:
+        await ctx.send("Invalid Channel")
 
 async def play(ctx,path):
     """active function that plays quotes"""

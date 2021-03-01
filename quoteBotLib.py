@@ -172,7 +172,8 @@ async def retroQuote(ctx,db):
     db -- bot database
     """
     async for message in ctx.channel.history(limit=500):
-        await createQuote(message,db)
+        if not db.quotes.find_one({"msgID":message.id}):
+            await createQuote(message,db)
 
 def isQuoteChannel(message,db):
     """checks if message channel is in the list of channels in the server entry
