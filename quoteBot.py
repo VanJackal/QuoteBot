@@ -30,11 +30,15 @@ async def on_message(message):
     await bot.process_commands(message)
 
 @bot.event
-async def on_reaction_add(reaction,user):
-    quote = db.quotes.find_one({"msgID":reaction.message.id})
-    if not quote:
+async def on_raw_reaction_add(payload):
+    quote = db.quotes.find_one({"msgID":payload.message_id})
+    if not quote or str(payload.emoji) != "🔈":
         return
-    
+    member = payload.member
+    await play(member.guild.voice_client,member,quote["file"])
+    channel = payload.member.guild.get_channel(payload.channel_id)
+    message = await channel.fetch_message(payload.message_id)
+    await message.remove_reaction("🔈",member)
 
 @bot.command()
 async def say(ctx, quoteID: int):
