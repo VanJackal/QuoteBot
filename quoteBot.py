@@ -29,10 +29,17 @@ async def on_message(message):
         await qbLib.createQuote(message,db)
     await bot.process_commands(message)
 
+@bot.event
+async def on_reaction_add(reaction,user):
+    quote = db.quotes.find_one({"msgID":reaction.message.id})
+    if not quote:
+        return
+    
+
 @bot.command()
 async def say(ctx, quoteID: int):
     """says quote with given id in message authors channel"""
-    await play(ctx,await qbLib.getPath(quoteID,db))
+    await play(ctx.guild.voice_client,ctx.message.author,await qbLib.getPath(quoteID,db))
 
 @bot.command()
 async def leave(ctx):
@@ -94,7 +101,7 @@ async def random(ctx):
     year = quoteObj["year"]
     await ctx.send(f"Playing quote #{choiceID}:\n||\"{quote}\" - {quotee} {year}||")
     path = quoteObj["file"]
-    await play(ctx,path)
+    await play(ctx.guild.voice_client,ctx.message.author,path)
     
 @bot.command()
 async def retroquote(ctx):
@@ -113,12 +120,10 @@ async def show(ctx, quoteID: int):
     year = quoteDict["year"]
     await ctx.send(f'Quote #{quoteID}: "{quote}" - {quotee} {year}')
 
-async def play(ctx,path):
+async def play(vc,user,path):
     """active function that plays quotes"""
-    if not ctx.voice_client:#if bot isnt in a voice channel join authors channel
-        vc = await ctx.author.voice.channel.connect()
-    else:#if bot is in a channel play quote in bots current channel
-        vc = ctx.voice_client
+    if not vc:#if bot isnt in a voice channel join authors channel
+        vc = await user.voice.channel.connect()
     vc.play(discord.FFmpegPCMAudio(path))
 
 bot.run(TOKEN)
