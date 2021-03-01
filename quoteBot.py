@@ -88,8 +88,12 @@ async def random(ctx):
     """plays random quote"""
     idx = db.quotes.find_one({"msgID":"GlobalID"})["IDCount"]
     choiceID = rand.randrange(int(idx))
-    await ctx.send(f"Playing quote #{choiceID}")
-    path = await qbLib.getPath(float(choiceID),db)
+    quoteObj = await qbLib.getQuote(choiceID,db)
+    quote = quoteObj["quote"]
+    quotee = quoteObj["quotee"]
+    year = quoteObj["year"]
+    await ctx.send(f"Playing quote #{choiceID}:\n||\"{quote}\" - {quotee} {year}||")
+    path = quoteObj["file"]
     await play(ctx,path)
     
 @bot.command()
