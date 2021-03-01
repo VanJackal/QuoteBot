@@ -8,6 +8,7 @@ import yaml
 import quoteBotLib as qbLib
 import pymongo
 import random as rand
+import asyncio
 
 with open("config.yaml") as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
@@ -21,6 +22,7 @@ with open("TOKEN") as f:#loading discord bot token
 @bot.event
 async def on_ready():
     print("Logged in as {0.user}".format(bot))
+    bot.loop.create_task(randomStatus())
 
 @bot.event
 async def on_message(message):
@@ -39,6 +41,12 @@ async def on_raw_reaction_add(payload):
     channel = payload.member.guild.get_channel(payload.channel_id)
     message = await channel.fetch_message(payload.message_id)
     await message.remove_reaction("🔈",member)
+
+async def randomStatus():
+    while True:
+        status = await qbLib.getNewStatus(db)
+        await bot.change_presence(activity=status)
+        await asyncio.sleep(3600)
 
 @bot.command()
 async def say(ctx, quoteID: int):

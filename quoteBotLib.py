@@ -4,6 +4,8 @@ import re
 import pymongo
 from gtts import gTTS
 import string
+import random as rand
+import discord
 
 async def createQuote(message,db):
     """attempts to create a quote from the given message and add it as an entry to the db
@@ -213,3 +215,11 @@ async def getQuote(quoteID,db):
 
     returns -- database entry of the quote with the given id"""
     return db.quotes.find_one({"ID":float(quoteID)})
+
+async def getNewStatus(db):
+    gID = db.quotes.find_one({"msgID":"GlobalID"})["IDCount"]
+    quoteID = rand.randrange(int(gID))
+    quote = await getQuote(quoteID,db)
+    if not quote:
+        quote = {"quote":"404"}
+    return discord.Activity(name = f"[{quoteID}] " + quote["quote"],type = discord.ActivityType.listening)
