@@ -7,7 +7,7 @@ import string
 import random as rand
 import discord
 
-async def createQuote(message,db):
+async def createQuote(message,db,quoteID = -1):
     """attempts to create a quote from the given message and add it as an entry to the db
     
     Arguments:
@@ -23,7 +23,8 @@ async def createQuote(message,db):
     for quote in message.content.split("\n"):#for each line in the message
         match = q.search(quote)
         if match:
-            quoteID = await getID(db)
+            if quoteID == -1:
+                quoteID = await getID(db)
             quoteDict = match.groupdict()
             if not quoteDict["quotee"]:#if the quote isnt credited to an author set it to "Cheesy Proverb"
                 quoteDict["quotee"] = "Cheesy Proverb"
@@ -223,3 +224,19 @@ async def getNewStatus(db):
     if not quote:
         quote = {"quote":"404"}
     return discord.Activity(name = f"[{quoteID}] " + quote["quote"],type = discord.ActivityType.listening)
+
+async def updateQuote(message,db):
+    quote = db.quotes.find_one({"msgID":message.id})
+    if quote:
+        db.quotes.delete_one({"msgID":message.id})
+        await createQuote(message,db,quoteID = quote["ID"])
+    else:
+        await createQuote(message,db)
+
+async def getMessage(ctx,msgID,db):
+    quoteChannels = db.servers.find_one({"serverID":ctx.guild.id})["channels"]
+    for channelID in quoteChannels:
+        channel = ctx.guild.get_channel(channelID)
+        message = await channel.fetch_message(msgID)
+        if message:
+            return message

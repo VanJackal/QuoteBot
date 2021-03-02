@@ -58,16 +58,13 @@ async def leave(ctx):
     """causes the bot to leave the channel"""
     await ctx.voice_client.disconnect()
 
-@bot.command()
+#@bot.command()#deprecated use update command instead
 async def addquote(ctx, msgID):
     """adds quote from given message id"""
-    quoteChannels = db.servers.find_one({"serverID":ctx.guild.id})["channels"]
-    for channelID in quoteChannels:
-        channel = ctx.guild.get_channel(channelID)
-        message = await channel.fetch_message(msgID)
-        if message:
-            await qbLib.createQuote(message,db)
-            return
+    message = await qbLib.getMessage(ctx,msgID,db)
+    if message:
+        await qbLib.createQuote(message,db)
+        return
     await ctx.send("Message not in any quote channel.")
 
 @bot.command()
@@ -131,6 +128,14 @@ async def show(ctx, quoteID: int):
     quotee = quoteDict["quotee"]
     year = quoteDict["year"]
     await ctx.send(f'Quote #{quoteID}: "{quote}" - {quotee} {year}')
+
+@bot.command()
+async def update(ctx, msgID):
+    message = await qbLib.getMessage(ctx,msgID,db)
+    if message:
+        await qbLib.updateQuote(message,db)
+    else:
+        ctx.send("Invalid Message")
 
 async def play(vc,user,path):
     """active function that plays quotes"""
