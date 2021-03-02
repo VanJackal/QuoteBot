@@ -34,7 +34,7 @@ async def on_message(message):
 @bot.event
 async def on_raw_reaction_add(payload):
     quote = db.quotes.find_one({"msgID":payload.message_id})
-    if not quote or str(payload.emoji) != "🔈":
+    if not quote or str(payload.emoji) != "🔈" or bot.user.id == payload.user_id:
         return
     member = payload.member
     await play(member.guild.voice_client,member,quote["file"])
@@ -45,8 +45,6 @@ async def on_raw_reaction_add(payload):
 @bot.event
 async def on_raw_message_edit(payload):
     data = payload.data
-    print(data)
-    #guild = await bot.fetch_guild(int(data["guild_id"]))
     channel = bot.get_channel(int(data["channel_id"]))
     message = await channel.fetch_message(int(data["id"]))
     if qbLib.isQuoteChannel(message,db):
