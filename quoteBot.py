@@ -29,10 +29,11 @@ async def on_message(message):
     """on message check if the attempt to quote the message if its in a valid channel"""
     if qbLib.isQuoteChannel(message,db):
         await qbLib.createQuote(message,db)
-    await bot.process_commands(message)
+    await bot.process_commands(message)#create passive process for random quote status
 
 @bot.event
 async def on_raw_reaction_add(payload):
+    """play quote when reactions are added"""
     quote = db.quotes.find_one({"msgID":payload.message_id})
     if not quote or str(payload.emoji) != "🔈" or bot.user.id == payload.user_id:
         return
@@ -44,6 +45,7 @@ async def on_raw_reaction_add(payload):
 
 @bot.event
 async def on_raw_message_edit(payload):
+    """auto updates edited messages in quote channels"""
     data = payload.data
     channel = bot.get_channel(int(data["channel_id"]))
     message = await channel.fetch_message(int(data["id"]))
@@ -51,6 +53,7 @@ async def on_raw_message_edit(payload):
         await qbLib.updateQuote(message,db)
 
 async def randomStatus():
+    """set status to a random quote every hour (3600 seconds)"""
     while True:
         status = await qbLib.getNewStatus(db)
         await bot.change_presence(activity=status)
@@ -122,6 +125,7 @@ async def random(ctx):
     
 @bot.command()
 async def retroquote(ctx):
+    """attempt to quote all messages in the channel"""
     if qbLib.isQuoteChannel(ctx.message,db):
         await ctx.send("Retroquoting!")
         await qbLib.retroQuote(ctx,db)
@@ -131,6 +135,7 @@ async def retroquote(ctx):
 
 @bot.command()
 async def show(ctx, quoteID: int):
+    """sends quote with the given id"""
     quoteDict = await qbLib.getQuote(quoteID,db)
     quote = quoteDict["quote"]
     quotee = quoteDict["quotee"]
@@ -139,6 +144,7 @@ async def show(ctx, quoteID: int):
 
 @bot.command()
 async def update(ctx, msgID):
+    """update quote from quotes message id, will also add the quote if it doesnt exist"""
     message = await qbLib.getMessage(ctx,msgID,db)
     if message:
         await qbLib.updateQuote(message,db)

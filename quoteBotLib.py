@@ -218,6 +218,12 @@ async def getQuote(quoteID,db):
     return db.quotes.find_one({"ID":float(quoteID)})
 
 async def getNewStatus(db):
+    """gets a new random status from all the quotes
+
+    args:
+    db -- bot database
+
+    returns -- discord activity with quote as text"""
     gID = db.quotes.find_one({"msgID":"GlobalID"})["IDCount"]
     quoteID = rand.randrange(int(gID))
     quote = await getQuote(quoteID,db)
@@ -226,6 +232,12 @@ async def getNewStatus(db):
     return discord.Activity(name = f"[{quoteID}] " + quote["quote"],type = discord.ActivityType.listening)
 
 async def updateQuote(message,db):
+    """updates the quote if it exists creates it if it doesnt
+
+    args:
+    message -- discord message
+    db -- bot database
+    """
     quote = db.quotes.find_one({"msgID":message.id})
     if quote:
         db.quotes.delete_one({"msgID":message.id})
@@ -234,6 +246,15 @@ async def updateQuote(message,db):
         await createQuote(message,db)
 
 async def getMessage(ctx,msgID,db):
+    """gets message from msgID regardless of channel execution
+
+    args:
+    ctx -- bot context
+    msgID -- discord message id
+    db -- bot database
+
+    returns -- discord message object
+    """
     quoteChannels = db.servers.find_one({"serverID":ctx.guild.id})["channels"]
     for channelID in quoteChannels:
         channel = ctx.guild.get_channel(channelID)
