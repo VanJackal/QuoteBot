@@ -127,7 +127,7 @@ async def getTags(quoteDict):
         if word not in tags:
             tags.append(word)
 
-    tags.append(quoteDict["quotee"].lower().split(" "))
+    tags.extend(quoteDict["quotee"].lower().split(" "))
     tags.append(quoteDict["year"])
 
     return tags
