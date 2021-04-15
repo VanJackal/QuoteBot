@@ -170,16 +170,15 @@ async def adminDo(ctx,func):
         return
     await func(ctx)
 
-async def retroQuote(ctx,db):
+async def updateMany(ctx,db,numMsg):
     """runs past 500 messages in a channel through createQuote
 
     args:
     ctx -- discord context
     db -- bot database
     """
-    async for message in ctx.channel.history(limit=500):
-        if not db.quotes.find_one({"msgID":message.id}):
-            await createQuote(message,db)
+    async for message in ctx.channel.history(limit=numMsg):
+        await updateQuote(message,db)
 
 def isQuoteChannel(message,db):
     """checks if message channel is in the list of channels in the server entry

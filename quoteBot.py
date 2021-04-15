@@ -124,11 +124,11 @@ async def random(ctx):
     await play(ctx.guild.voice_client,ctx.message.author,path)
     
 @bot.command()
-async def retroquote(ctx):
+async def updatemany(ctx, numMsg = 500):
     """attempt to quote all messages in the channel"""
     if qbLib.isQuoteChannel(ctx.message,db):
         await ctx.send("Retroquoting!")
-        await qbLib.retroQuote(ctx,db)
+        await qbLib.updateMany(ctx,db,numMsg)
         await ctx.send("Retroquoting done!")
     else:
         await ctx.send("Invalid Channel")
