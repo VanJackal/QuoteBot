@@ -4,6 +4,8 @@ TOKEN
 Quotes/
 *.swp
 testCode.py
+clear.sh
+clearMongo
 # GENERIC PYTHON
 # Byte-compiled / optimized / DLL files
 __pycache__/
