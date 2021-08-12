@@ -39,21 +39,6 @@ async def createQuote(message,db,quoteID = -1):
 
     return foundQuote
 
-async def dictQuote(content):#returns a dict of {quote,quotee,year}, based on a quote string
-    #DEPRECATED
-    content = content.strip()
-    quote = re.search(r'((?![\"\'“”‘’]).+(?=[\"\'“”‘’]))',content)
-    year = re.search(r'\d{4}$',content)
-    quotee = content[quote.end() + 1:year.start()]#grabs string that isnt the date or the main quote content
-    quotee = quotee.strip()
-    if quotee[0] == '-':
-        quotee = quotee[1:].strip()#strips the whitespace and '-' from the quotee line
-    return {
-            "quote":quote.group(),
-            "quotee":quotee,
-            "year":year.group()
-            }
-
 async def getID(db):
     """gets a new id to use for a quote and iterates the counter
 
