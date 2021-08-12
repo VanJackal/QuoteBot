@@ -39,7 +39,7 @@ async def createQuote(message,db,quoteID = -1):
 
     return foundQuote
 
-async def getID(db):
+async def getID(db):#TODO ServerSpec
     """gets a new id to use for a quote and iterates the counter
 
     args:
@@ -51,7 +51,7 @@ async def getID(db):
     quoteID = db.quotes.find_one({"msgID":"GlobalID"})["IDCount"]
     return quoteID
 
-async def speakQuote(quoteDict,quoteID):
+async def speakQuote(quoteDict,quoteID):#TODO ServerSpec - have this add a server id to the path
     """uses gtts to create a tts mp3 of the give quote and outputs it to [quoteID].mp3
 
     args:
@@ -117,7 +117,7 @@ async def getTags(quoteDict):
 
     return tags
 
-async def getPath(quoteID,db):
+async def getPath(quoteID,db):#TODO ServerSpec
     """gets the path to the audio file of the quote with the given id
 
     args:
@@ -180,7 +180,7 @@ def isQuoteChannel(message,db):
     quoteChannels = map(int,server["channels"])
     return message.channel.id in quoteChannels
 
-async def search(tags,db):
+async def search(tags,db):#TODO ServerSpec
     """search database with given tags
 
     args:
@@ -191,7 +191,7 @@ async def search(tags,db):
     """
     return list(db.quotes.find({"tags":{"$in":tags}}))
 
-async def getQuote(quoteID,db):
+async def getQuote(quoteID,db):#TODO ServerSpec
     """gets the quote from the id
 
     args:
@@ -201,7 +201,7 @@ async def getQuote(quoteID,db):
     returns -- database entry of the quote with the given id"""
     return db.quotes.find_one({"ID":float(quoteID)})
 
-async def getNewStatus(db):
+async def getNewStatus(db):#TODO add a list of verified quotes that can be used (200 ish) (this will prevent vulgar quotes from being added)
     """gets a new random status from all the quotes
 
     args:
@@ -215,7 +215,7 @@ async def getNewStatus(db):
         quote = {"quote":"404"}
     return discord.Activity(name = f"[{quoteID}] " + quote["quote"],type = discord.ActivityType.listening)
 
-async def updateQuote(message,db):
+async def updateQuote(message,db):#TODO ServerSpec
     """updates the quote if it exists creates it if it doesnt
 
     args:

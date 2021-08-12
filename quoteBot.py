@@ -102,7 +102,7 @@ async def search(ctx,*tags):
     await ctx.send(result)
 
 @bot.command()
-async def random(ctx):
+async def random(ctx):#TODO Rewrite to integrate with search functionality
     """plays random quote"""
     idx = db.quotes.find_one({"msgID":"GlobalID"})["IDCount"]
     choiceID = rand.randrange(int(idx))
