@@ -69,15 +69,6 @@ async def leave(ctx):
     """causes the bot to leave the channel"""
     await ctx.voice_client.disconnect()
 
-#@bot.command()#deprecated use update command instead
-async def addquote(ctx, msgID):
-    """adds quote from given message id"""
-    message = await qbLib.getMessage(ctx,msgID,db)
-    if message:
-        await qbLib.createQuote(message,db)
-        return
-    await ctx.send("Message not in any quote channel.")
-
 @bot.command()
 async def setchannel(ctx):
     """sets channel as a quote channel and retro quotes the messages in the channel"""
