@@ -155,7 +155,7 @@ async def adminDo(ctx,func):
         return
     await func(ctx)
 
-async def updateMany(ctx,db,numMsg):
+async def updateMany(ctx,db,numMsg=500):
     """runs past 500 messages in a channel through createQuote
 
     args:

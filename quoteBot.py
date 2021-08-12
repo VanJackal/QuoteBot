@@ -89,7 +89,7 @@ async def setChannel(ctx):
     channelID = ctx.channel.id
     await qbLib.addChannel(serverID,channelID,db)
     await ctx.send("Added channel to quotes channel list. RETROQUOTING!")
-    await qbLib.retroQuote(ctx,db)
+    await qbLib.updateMany(ctx,db)
     await ctx.send("*Retroquoteing Done!*")
 
 @bot.command()
