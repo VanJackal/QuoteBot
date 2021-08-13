@@ -70,17 +70,18 @@ async def leave(ctx):
     await ctx.voice_client.disconnect()
 
 @bot.command()
-async def setchannel(ctx):
+async def setchannel(ctx,numMsg = 500):
     """sets channel as a quote channel and retro quotes the messages in the channel"""
-    await qbLib.adminDo(ctx,setChannelCommand)
+    if await qbLib.adminDo(ctx):
+        await setChannelCommand(ctx,numMsg)
 
-async def setChannelCommand(ctx):
+async def setChannelCommand(ctx,numMsg):
     """active function of setchannel command"""
     serverID = ctx.guild.id
     channelID = ctx.channel.id
     await qbLib.addChannel(serverID,channelID,db)
     await ctx.send("Added channel to quotes channel list. RETROQUOTING!")
-    await qbLib.updateMany(ctx,db)
+    await qbLib.updateMany(ctx,db,int(numMsg))
     await ctx.send("*Retroquoteing Done!*")
 
 @bot.command()
