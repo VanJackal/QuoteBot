@@ -16,6 +16,8 @@ async def createQuote(message,db,quoteID = -1):
 
     returns bool, true if a quote is created
     """
+    if message.author.bot:
+        return False
     q = re.compile(r'(?:[\"“”])(?P<quote>.+)(?:[\"“”])(?:[\s-]*)(?P<quotee>.+?|$)(?:\s*)(?P<year>\d{4}$|$)')#regex that matches quote, quotee, and year 
 
     foundQuote = False

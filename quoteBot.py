@@ -72,9 +72,9 @@ async def leave(ctx):
 @bot.command()
 async def setchannel(ctx):
     """sets channel as a quote channel and retro quotes the messages in the channel"""
-    await qbLib.adminDo(ctx,setChannel)
+    await qbLib.adminDo(ctx,setChannelCommand)
 
-async def setChannel(ctx):
+async def setChannelCommand(ctx):
     """active function of setchannel command"""
     serverID = ctx.guild.id
     channelID = ctx.channel.id
