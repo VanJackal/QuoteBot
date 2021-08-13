@@ -84,8 +84,8 @@ async def dbEntry(message,quoteDict,quoteID,audio,db):
     tags = await getTags(quoteDict)
     entry = {
             "msgID":message.id,
-            "server":message.guild.id,
-            "channel":message.channel.id,
+            "serverID":message.guild.id,
+            "channelID":message.channel.id,
             "quote":quoteDict["quote"],
             "quotee":quoteDict["quotee"],
             "year":quoteDict["year"],
@@ -117,7 +117,7 @@ async def getTags(quoteDict):
 
     return tags
 
-async def getPath(quoteID,db):#TODO ServerSpec
+async def getPath(quoteID,serverID,db):
     """gets the path to the audio file of the quote with the given id
 
     args:
@@ -126,7 +126,7 @@ async def getPath(quoteID,db):#TODO ServerSpec
 
     return quote with the given id
     """
-    return db.quotes.find_one({"ID":quoteID})["file"]
+    return db.quotes.find_one({"serverID":serverID,"ID":quoteID})["file"]
 
 async def addChannel(serverID,channelID,db):
     """attempts to add a channel to the quote channels list in the database, will also add the server to the db if it isnt found
@@ -180,7 +180,7 @@ def isQuoteChannel(message,db):
     quoteChannels = map(int,server["channels"])
     return message.channel.id in quoteChannels
 
-async def search(tags,db):#TODO ServerSpec
+async def search(tags,serverID,db):
     """search database with given tags
 
     args:
@@ -189,9 +189,9 @@ async def search(tags,db):#TODO ServerSpec
 
     return -- list of database entries with matching tags
     """
-    return list(db.quotes.find({"tags":{"$in":tags}}))
+    return list(db.quotes.find({"serverID":serverID,"tags":{"$in":tags}}))
 
-async def getQuote(quoteID,db):#TODO ServerSpec
+async def getQuote(quoteID:int,serverID:int,db):
     """gets the quote from the id
 
     args:
@@ -199,9 +199,9 @@ async def getQuote(quoteID,db):#TODO ServerSpec
     db -- bot database
 
     returns -- database entry of the quote with the given id"""
-    return db.quotes.find_one({"ID":float(quoteID)})
+    return db.quotes.find_one({"serverID":serverID,"ID":int(quoteID)})
 
-async def getNewStatus(db):#TODO add a list of verified quotes that can be used (200 ish) (this will prevent vulgar quotes from being added)
+async def getNewStatus(db):#TODO add a list of verified quotes that can be used (200 ish) (this will prevent vulgar quotes from being added) this function may end up being removed
     """gets a new random status from all the quotes
 
     args:
@@ -215,8 +215,9 @@ async def getNewStatus(db):#TODO add a list of verified quotes that can be used 
         quote = {"quote":"404"}
     return discord.Activity(name = f"[{quoteID}] " + quote["quote"],type = discord.ActivityType.listening)
 
-async def updateQuote(message,db):#TODO ServerSpec
+async def updateQuote(message,db):
     """updates the quote if it exists creates it if it doesnt
+    assumes the message is in a valid quote channel
 
     args:
     message -- discord message

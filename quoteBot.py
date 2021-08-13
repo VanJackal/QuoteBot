@@ -62,7 +62,7 @@ async def randomStatus():
 @bot.command()
 async def say(ctx, quoteID: int):
     """says quote with given id in message authors channel"""
-    await play(ctx.guild.voice_client,ctx.message.author,await qbLib.getPath(quoteID,db))
+    await play(ctx.guild.voice_client,ctx.message.author,await qbLib.getPath(quoteID,ctx.guild.id,db))
 
 @bot.command()
 async def leave(ctx):
@@ -86,10 +86,10 @@ async def setChannel(ctx):
 @bot.command()
 async def search(ctx,*tags):
     """search database for entries with given tags"""
-    entries = await qbLib.search(tags,db)
+    entries = await qbLib.search(tags,ctx.guild.id,db)
     if len(tags) == 1:
         try:
-            entries.append(await qbLib.getQuote(tags[0],db))
+            entries.append(await qbLib.getQuote(int(tags[0]),ctx.guild.id,db))
         except:
             pass
     template = "{:<4} | {:<32} | {:<16}\n"
@@ -97,16 +97,17 @@ async def search(ctx,*tags):
     result += template.format("ID","Quote","Author")
     result += "-"*5 + "+" + "-"*34 + "+" + "-"*17 + "\n"
     for entry in entries[:10]:
-        result += template.format(int(entry["ID"]),entry["quote"][:32],entry["quotee"])
+        if entry : result += template.format(int(entry["ID"]),entry["quote"][:32],entry["quotee"])
     result += "```"
     await ctx.send(result)
 
 @bot.command()
 async def random(ctx):#TODO Rewrite to integrate with search functionality
     """plays random quote"""
-    idx = db.quotes.find_one({"msgID":"GlobalID"})["IDCount"]
-    choiceID = rand.randrange(int(idx))
-    quoteObj = await qbLib.getQuote(choiceID,db)
+    idx = db.servers.find_one({"serverID":ctx.guild.id})["currentID"]
+    choiceID = rand.randrange(int(idx)) + 1
+    print(choiceID)
+    quoteObj = await qbLib.getQuote(int(choiceID),ctx.guild.id,db)
     quote = quoteObj["quote"]
     quotee = quoteObj["quotee"]
     year = quoteObj["year"]
@@ -127,7 +128,7 @@ async def updatemany(ctx, numMsg = 500):
 @bot.command()
 async def show(ctx, quoteID: int):
     """sends quote with the given id"""
-    quoteDict = await qbLib.getQuote(quoteID,db)
+    quoteDict = await qbLib.getQuote(quoteID,ctx.guild.id,db)
     quote = quoteDict["quote"]
     quotee = quoteDict["quotee"]
     year = quoteDict["year"]
