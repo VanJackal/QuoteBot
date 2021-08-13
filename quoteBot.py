@@ -85,6 +85,13 @@ async def setChannelCommand(ctx,numMsg):
     await ctx.send("*Retroquoteing Done!*")
 
 @bot.command()
+async def unsetchannel(ctx):
+    """removes the channel from the valid quotes channel"""
+    if await qbLib.adminDo(ctx):
+        await qbLib.removeChannel(ctx.guild.id,ctx.channel.id,db)
+        await ctx.send("Channel removed from valid quote channels")
+
+@bot.command()
 async def search(ctx,*tags):
     """search database for entries with given tags"""
     entries = await qbLib.search(tags,ctx.guild.id,db)
