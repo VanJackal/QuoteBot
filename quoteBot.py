@@ -22,7 +22,7 @@ with open("TOKEN") as f:#loading discord bot token
 @bot.event
 async def on_ready():
     print("Logged in as {0.user}".format(bot))
-    bot.loop.create_task(randomStatus())
+    #bot.loop.create_task(randomStatus())#disabled until new implimentation
 
 @bot.event
 async def on_message(message):

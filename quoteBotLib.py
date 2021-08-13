@@ -24,11 +24,11 @@ async def createQuote(message,db,quoteID = -1):
         match = q.search(quote)
         if match:
             if quoteID == -1:
-                quoteID = await getID(db)
+                quoteID = await getID(db,message.guild.id)
             quoteDict = match.groupdict()
             if not quoteDict["quotee"]:#if the quote isnt credited to an author set it to "Cheesy Proverb"
                 quoteDict["quotee"] = "Cheesy Proverb"
-            audio = await speakQuote(quoteDict,quoteID)
+            audio = await speakQuote(quoteDict,quoteID,message.guild.id)
             await dbEntry(message,quoteDict,quoteID,audio,db)
             foundQuote = True
         else:
@@ -39,7 +39,7 @@ async def createQuote(message,db,quoteID = -1):
 
     return foundQuote
 
-async def getID(db):#TODO ServerSpec
+async def getID(db,serverID):
     """gets a new id to use for a quote and iterates the counter
 
     args:
@@ -47,11 +47,11 @@ async def getID(db):#TODO ServerSpec
 
     returns int quoteID
     """
-    db.quotes.update_one({"msgID":"GlobalID"},{"$inc":{"IDCount":1}})
-    quoteID = db.quotes.find_one({"msgID":"GlobalID"})["IDCount"]
+    db.servers.update_one({"serverID":serverID},{"$inc":{"currentID":1}})
+    quoteID = db.servers.find_one({"serverID":serverID})["currentID"]
     return quoteID
 
-async def speakQuote(quoteDict,quoteID):#TODO ServerSpec - have this add a server id to the path
+async def speakQuote(quoteDict,quoteID,serverID):
     """uses gtts to create a tts mp3 of the give quote and outputs it to [quoteID].mp3
 
     args:
@@ -66,7 +66,7 @@ async def speakQuote(quoteDict,quoteID):#TODO ServerSpec - have this add a serve
 
     fullQuote = f"{quote}. {quotee}, {year}"
 
-    audio = f"./Quotes/{quoteID}.mp3"
+    audio = f"./Quotes/{serverID}-{quoteID}.mp3"
     tts = gTTS(fullQuote)
     tts.save(audio)
     return audio
@@ -138,7 +138,7 @@ async def addChannel(serverID,channelID,db):
     """
     server = db.servers.find_one({"serverID":serverID})
     if not server:
-        db.servers.insert_one({"serverID":serverID,"channels":[channelID]})
+        db.servers.insert_one({"serverID":serverID,"channels":[channelID],"currentID":0})
     elif channelID not in server["channels"]:
         db.servers.update_one({"serverID":serverID},{"$push":{"channels":channelID}})
 
