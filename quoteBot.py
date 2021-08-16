@@ -157,4 +157,12 @@ async def play(vc,user,path):
         vc = await user.voice.channel.connect()
     vc.play(discord.FFmpegPCMAudio(path))
 
+@bot.command()
+async def setup(ctx):
+    """Displays basic info on how to setup quoteBot"""
+    body = "Choose a channel and use $setchannel, if the channel has more than 500 messages specify a number of messages using '$setchannel [number]', any quote sent in this channel will now be logged."
+    embed = discord.Embed(title = "Setup Guide",description = body)
+    embed.add_field(name = "You can get additional info from the wiki:",value = "[Here](http://github.com/VanJackal/QuoteBot/)")
+    await ctx.send(embed = embed)
+
 bot.run(TOKEN)
