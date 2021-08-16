@@ -144,7 +144,18 @@ async def addChannel(serverID,channelID,db):
     elif channelID not in server["channels"]:
         db.servers.update_one({"serverID":serverID},{"$push":{"channels":channelID}})
 
-async def adminDo(ctx,func):
+async def removeChannel(serverID,channelID,db):
+    """
+    removes the channel from the servers db entry
+
+    args:
+    @serverID: ID of guild
+    @channelID: ID of Channel
+    @db: bot database
+    """
+    db.servers.update({"serverID":serverID},{"$pull":{"channels":channelID}})
+
+async def adminDo(ctx):
     """executes the given function if the author of the message has the administrator permission
 
     args:
@@ -155,7 +166,7 @@ async def adminDo(ctx,func):
     if not check:
         ctx.send("You must be an admin to do this.")
         return
-    await func(ctx)
+    return check
 
 async def updateMany(ctx,db,numMsg=500):
     """runs past 500 messages in a channel through createQuote

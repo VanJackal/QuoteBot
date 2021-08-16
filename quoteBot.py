@@ -70,18 +70,26 @@ async def leave(ctx):
     await ctx.voice_client.disconnect()
 
 @bot.command()
-async def setchannel(ctx):
+async def setchannel(ctx,numMsg = 500):
     """sets channel as a quote channel and retro quotes the messages in the channel"""
-    await qbLib.adminDo(ctx,setChannelCommand)
+    if await qbLib.adminDo(ctx):
+        await setChannelCommand(ctx,numMsg)
 
-async def setChannelCommand(ctx):
+async def setChannelCommand(ctx,numMsg):
     """active function of setchannel command"""
     serverID = ctx.guild.id
     channelID = ctx.channel.id
     await qbLib.addChannel(serverID,channelID,db)
     await ctx.send("Added channel to quotes channel list. RETROQUOTING!")
-    await qbLib.updateMany(ctx,db)
+    await qbLib.updateMany(ctx,db,int(numMsg))
     await ctx.send("*Retroquoteing Done!*")
+
+@bot.command()
+async def unsetchannel(ctx):
+    """removes the channel from the valid quotes channel"""
+    if await qbLib.adminDo(ctx):
+        await qbLib.removeChannel(ctx.guild.id,ctx.channel.id,db)
+        await ctx.send("Channel removed from valid quote channels")
 
 @bot.command()
 async def search(ctx,*tags):
@@ -148,5 +156,13 @@ async def play(vc,user,path):
     if not vc:#if bot isnt in a voice channel join authors channel
         vc = await user.voice.channel.connect()
     vc.play(discord.FFmpegPCMAudio(path))
+
+@bot.command()
+async def setup(ctx):
+    """Displays basic info on how to setup quoteBot"""
+    body = "Choose a channel and use $setchannel, if the channel has more than 500 messages specify a number of messages using '$setchannel [number]', any quote sent in this channel will now be logged."
+    embed = discord.Embed(title = "Setup Guide",description = body)
+    embed.add_field(name = "You can get additional info from the wiki:",value = "[Here](http://github.com/VanJackal/QuoteBot/)")
+    await ctx.send(embed = embed)
 
 bot.run(TOKEN)
