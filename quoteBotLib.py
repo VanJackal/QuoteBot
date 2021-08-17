@@ -203,7 +203,8 @@ async def search(tags,serverID,db):
 
     return -- list of database entries with matching tags
     """
-    return list(db.quotes.find({"serverID":serverID,"tags":{"$in":tags}}))
+    tagsLower = [tag.lower() for tag in tags]
+    return list(db.quotes.find({"serverID":serverID,"tags":{"$in":tagsLower}}))
 
 async def getQuote(quoteID:int,serverID:int,db):
     """gets the quote from the id
