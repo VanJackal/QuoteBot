@@ -165,4 +165,13 @@ async def setup(ctx):
     embed.add_field(name = "You can get additional info from the wiki:",value = "[Here](http://github.com/VanJackal/QuoteBot/)")
     await ctx.send(embed = embed)
 
+@bot.command()
+async def listchannels(ctx):
+    server = db.servers.find_one({"serverID":ctx.guild.id})
+    channels = server["channels"] if server else []
+    message = '*Quote Channels:*\n'
+    for channel in channels:
+        message += f"<#{channel}>\n"
+    await ctx.send(message)
+
 bot.run(TOKEN)

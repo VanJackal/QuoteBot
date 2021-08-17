@@ -106,16 +106,17 @@ async def getTags(quoteDict):
 
     returns list of tags
     """
-    quote = quoteDict["quote"].translate(str.maketrans('','',string.punctuation))
-    quoteSplit = quote.lower().split(" ")
+    quote = quoteDict["quote"].translate(str.maketrans(string.punctuation,' '*len(string.punctuation)))
+    quoteSplit = quote.lower().split()
+    quoteSplit.extend(quoteDict["quotee"].translate(str.maketrans(string.punctuation, ' '*len(string.punctuation))).lower().split())
     tags = []
     for word in quoteSplit:
         word = word.strip()
         if word not in tags:
             tags.append(word)
 
-    tags.extend(quoteDict["quotee"].lower().split(" "))
-    tags.append(quoteDict["year"])
+    if quoteDict['year']:
+        tags.append(quoteDict["year"])
 
     return tags
 
@@ -202,7 +203,8 @@ async def search(tags,serverID,db):
 
     return -- list of database entries with matching tags
     """
-    return list(db.quotes.find({"serverID":serverID,"tags":{"$in":tags}}))
+    tagsLower = [tag.lower() for tag in tags]
+    return list(db.quotes.find({"serverID":serverID,"tags":{"$in":tagsLower}}))
 
 async def getQuote(quoteID:int,serverID:int,db):
     """gets the quote from the id
@@ -256,6 +258,8 @@ async def getMessage(ctx,msgID,db):
     quoteChannels = db.servers.find_one({"serverID":ctx.guild.id})["channels"]
     for channelID in quoteChannels:
         channel = ctx.guild.get_channel(channelID)
-        message = await channel.fetch_message(msgID)
-        if message:
+        try:
+            message = await channel.fetch_message(msgID)
             return message
+        except discord.errors.NotFound:
+            pass
