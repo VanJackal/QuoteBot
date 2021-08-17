@@ -106,16 +106,17 @@ async def getTags(quoteDict):
 
     returns list of tags
     """
-    quote = quoteDict["quote"].translate(str.maketrans('','',string.punctuation))
-    quoteSplit = quote.lower().split(" ")
+    quote = quoteDict["quote"].translate(str.maketrans(string.punctuation,' '*len(string.punctuation)))
+    quoteSplit = quote.lower().split()
+    quoteSplit.extend(quoteDict["quotee"].translate(str.maketrans(string.punctuation, ' '*len(string.punctuation))).lower().split())
     tags = []
     for word in quoteSplit:
         word = word.strip()
         if word not in tags:
             tags.append(word)
 
-    tags.extend(quoteDict["quotee"].lower().split(" "))
-    tags.append(quoteDict["year"])
+    if quoteDict['year']:
+        tags.append(quoteDict["year"])
 
     return tags
 
