@@ -29,7 +29,7 @@ async def createQuote(message,db,quoteID = -1):
                 quoteID = await getID(db,message.guild.id)
             quoteDict = match.groupdict()
             if not quoteDict["quotee"]:#if the quote isnt credited to an author set it to "Cheesy Proverb"
-                quoteDict["quotee"] = "Cheesy Proverb"
+                quoteDict["quotee"] = "Unknown"
             audio = await speakQuote(quoteDict,quoteID,message.guild.id)
             await dbEntry(message,quoteDict,quoteID,audio,db)
             foundQuote = True
