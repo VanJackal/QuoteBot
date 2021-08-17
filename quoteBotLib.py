@@ -256,6 +256,8 @@ async def getMessage(ctx,msgID,db):
     quoteChannels = db.servers.find_one({"serverID":ctx.guild.id})["channels"]
     for channelID in quoteChannels:
         channel = ctx.guild.get_channel(channelID)
-        message = await channel.fetch_message(msgID)
-        if message:
+        try:
+            message = await channel.fetch_message(msgID)
             return message
+        except discord.errors.NotFound:
+            pass
