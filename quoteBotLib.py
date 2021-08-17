@@ -263,3 +263,10 @@ async def getMessage(ctx,msgID,db):
             return message
         except discord.errors.NotFound:
             pass
+
+async def getRandomQuote(ctx,db):
+    """
+    returns a random quote object from the server context
+    """
+    quote = db.quotes.aggregate([{'$match':{'serverID':ctx.guild.id}},{'$sample':{'size':1}}])
+    return quote.next()

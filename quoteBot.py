@@ -110,16 +110,14 @@ async def search(ctx,*tags):
     await ctx.send(result)
 
 @bot.command()
-async def random(ctx):#TODO Rewrite to integrate with search functionality
+async def random(ctx):
     """plays random quote"""
-    idx = db.servers.find_one({"serverID":ctx.guild.id})["currentID"]
-    choiceID = rand.randrange(int(idx)) + 1
-    print(choiceID)
-    quoteObj = await qbLib.getQuote(int(choiceID),ctx.guild.id,db)
+    quoteObj = await qbLib.getRandomQuote(ctx,db)
     quote = quoteObj["quote"]
     quotee = quoteObj["quotee"]
     year = quoteObj["year"]
-    await ctx.send(f"Playing quote #{choiceID}:\n||\"{quote}\" - {quotee} {year}||")
+    quoteID = quoteObj["ID"]
+    await ctx.send(f"Playing quote #{quoteID}:\n||\"{quote}\" - {quotee} {year}||")
     path = quoteObj["file"]
     await play(ctx.guild.voice_client,ctx.message.author,path)
     
