@@ -56,9 +56,8 @@ async def on_raw_message_edit(payload):
 async def on_raw_message_delete(data):
     """auto updates the deleted status of quotes"""
     if qbLib.isQuoteChannel(None,db,data.guild_id,data.channel_id):
-        print("deleting")
-        db.quotes.find_one_and_update({"msgID":data.message_id},{"$set":{"deleted":True}})
-
+        quoteEntry = db.quotes.find_one_and_delete({"msgID":data.message_id})
+        db.deleted.insert_one(quoteEntry)
 
 async def randomStatus():
     """set status to a random quote every hour (3600 seconds)"""
@@ -161,6 +160,7 @@ async def play(vc,user,path):
     """active function that plays quotes"""
     if not vc:#if bot isnt in a voice channel join authors channel
         vc = await user.voice.channel.connect()
+    print(vc)#this stays untill the voice issue is repeated
     vc.play(discord.FFmpegPCMAudio(path))
 
 @bot.command()
