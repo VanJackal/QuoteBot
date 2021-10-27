@@ -52,6 +52,14 @@ async def on_raw_message_edit(payload):
     if qbLib.isQuoteChannel(message,db):
         await qbLib.updateQuote(message,db)
 
+@bot.event
+async def on_raw_message_delete(data):
+    """auto updates the deleted status of quotes"""
+    if qbLib.isQuoteChannel(None,db,data.guild_id,data.channel_id):
+        print("deleting")
+        db.quotes.find_one_and_update({"msgID":data.message_id},{"$set":{"deleted":True}})
+
+
 async def randomStatus():
     """set status to a random quote every hour (3600 seconds)"""
     while True:

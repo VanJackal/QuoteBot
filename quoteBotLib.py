@@ -179,7 +179,7 @@ async def updateMany(ctx,db,numMsg=500):
     async for message in ctx.channel.history(limit=numMsg):
         await updateQuote(message,db)
 
-def isQuoteChannel(message,db):
+def isQuoteChannel(message,db,guildID='',channelID=''):
     """checks if message channel is in the list of channels in the server entry
 
     args:
@@ -188,11 +188,15 @@ def isQuoteChannel(message,db):
 
     returns -- bool true if channel is in list of quote channels"""
 
-    server = db.servers.find_one({"serverID":message.guild.id})
+    if(message and not (channelID and guildID)):
+        guildID = message.guild.id
+        channelID = message.channel.id
+
+    server = db.servers.find_one({"serverID":guildID})
     if not server:
         return False
     quoteChannels = map(int,server["channels"])
-    return message.channel.id in quoteChannels
+    return channelID in quoteChannels
 
 async def search(tags,serverID,db):
     """search database with given tags
