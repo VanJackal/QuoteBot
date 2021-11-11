@@ -5,6 +5,7 @@ from discord.ext import commands
 
 import re
 import yaml
+import VoiceSession
 import quoteBotLib as qbLib
 import pymongo
 import random as rand
@@ -18,6 +19,8 @@ dbClient = pymongo.MongoClient(f"mongodb://{dbAddr}/")
 db = dbClient.quoteDB
 with open("TOKEN") as f:#loading discord bot token
     TOKEN = f.read()
+
+voiceSessions = {}
 
 @bot.event
 async def on_ready():
@@ -38,7 +41,7 @@ async def on_raw_reaction_add(payload):
     if not quote or str(payload.emoji) != "🔈" or bot.user.id == payload.user_id:
         return
     member = payload.member
-    await play(member.guild.voice_client,member,quote["file"])
+    await play(member.guild.voice_client,member,quote["file"])#TODO change over to new play function
     channel = payload.member.guild.get_channel(payload.channel_id)
     message = await channel.fetch_message(payload.message_id)
     await message.remove_reaction("🔈",member)
@@ -69,7 +72,7 @@ async def randomStatus():
 @bot.command()
 async def say(ctx, quoteID: int):
     """says quote with given id in message authors channel"""
-    await play(ctx.guild.voice_client,ctx.message.author,await qbLib.getPath(quoteID,ctx.guild.id,db))
+    await play(ctx.guild.voice_client,ctx.message.author,await qbLib.getPath(quoteID,ctx.guild.id,db))#TODO change over to new play 
 
 @bot.command()
 async def leave(ctx):
@@ -126,7 +129,7 @@ async def random(ctx):
     quoteID = quoteObj["ID"]
     await ctx.send(f"Playing quote #{quoteID}:\n||\"{quote}\" - {quotee} {year}||")
     path = quoteObj["file"]
-    await play(ctx.guild.voice_client,ctx.message.author,path)
+    await play(ctx.guild.voice_client,ctx.message.author,path)#TODO change over to new play footprint
     
 @bot.command()
 async def updatemany(ctx, numMsg = 500):
@@ -156,12 +159,19 @@ async def update(ctx, msgID):
     else:
         ctx.send("Invalid Message")
 
-async def play(vc,user,path):
+async def play(vc,user,path):#this should take in a voice channel id and a guildid
     """active function that plays quotes"""
-    if not vc:#if bot isnt in a voice channel join authors channel
-        vc = await user.voice.channel.connect()
-    print(vc)#this stays untill the voice issue is repeated
-    vc.play(discord.FFmpegPCMAudio(path))
+    #check for an active voice session in the guild
+    #if a session is found pass the play command to the session
+    #if the session is not found create a new session(from the guildid and channel) and pass the command
+    gid = user.guild.id
+    
+    if gid not in voiceSessions:
+        vs = await VoiceSession.createVoiceSession(gid,user.voice.channel,voiceSessions)
+        voiceSessions[gid] = vs
+    else:
+        vs = voiceSessions[gid]
+    vs.add(path)
 
 @bot.command()
 async def setup(ctx):
