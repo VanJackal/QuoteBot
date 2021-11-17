@@ -13,25 +13,33 @@ class VoiceSession:
         self.q = queue.Queue()
         self.t = threading.Thread(target=self.player, daemon=True)
         self.voiceSessions = voiceSessions
+        print(f"Started VoiceSession for {self.guildID}")
     
     async def _init(self,channel):
         self.voiceClient = await channel.connect()
         self.t.start()
 
-    async def player(self):
+    def player(self):
         while self.active and self.voiceClient.is_connected():
-            path = self.q.get()
-            self.voiceClient.play(discord.FFmpegPCMAudio(path))
-            while self.voiceClient.is_playing():
-                pass#TODO Change this (it be super hacky)
-            self.q.task_done()
-        self.voiceSessions.pop(self.guildID)
+            try:
+                path = self.q.get(timeout=10)
+                self.voiceClient.play(discord.FFmpegPCMAudio(path))
+                while self.voiceClient.is_playing() and self.active:
+                    pass#TODO Change this (it be super hacky)
+                self.q.task_done()
+            except(queue.Empty):
+                print(f'Queue Timeout in {self.guildID}')
+        print(f'VoiceSession {self.guildID} Closed')
     
     def add(self, path):
         self.q.put(path)
     
-    def leave(self):
+    async def leave(self):
+        print(f'VoiceSession {self.guildID} Closing')
         self.voiceClient.pause()
         self.active = False
+        await self.voiceClient.disconnect()
+        self.voiceSessions.pop(self.guildID)
+        print(f'VoiceSession {self.guildID} Popped')
         self.q.join()
-        self.voiceClient.disconnect()
+        self.t.join()

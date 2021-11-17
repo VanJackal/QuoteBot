@@ -77,7 +77,8 @@ async def say(ctx, quoteID: int):
 @bot.command()
 async def leave(ctx):
     """causes the bot to leave the channel"""
-    await ctx.voice_client.disconnect()
+    if ctx.guild.id in voiceSessions:
+        await voiceSessions[ctx.guild.id].leave()
 
 @bot.command()
 async def setchannel(ctx,numMsg = 500):
