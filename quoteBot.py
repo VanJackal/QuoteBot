@@ -31,8 +31,7 @@ async def on_ready():
 async def on_message(message):
     """on message check if the attempt to quote the message if its in a valid channel"""
     if qbLib.isQuoteChannel(message,db):
-        print(message.attachments)
-        await qbLib.createQuote(message,db)
+        await qbLib.processMessage(message,db)
     await bot.process_commands(message)#create passive process for random quote status
 
 @bot.event
