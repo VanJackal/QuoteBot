@@ -7,6 +7,17 @@ import string
 import random as rand
 import discord
 
+async def processMessage(message, db, quoteID = -1):
+    if message.author.bot:
+        return False
+    if message.attachments:
+        if filter(lambda attach : attach.split('/')[0] == 'audio', message.attachments):# check if at least one of the attachments is an audio file
+            await createClip(message, db, quoteID)
+        else:
+            await createQuote(message, db, quoteID)
+    else:
+        await createQuote(message, db, quoteID)
+
 async def createQuote(message,db,quoteID = -1):
     """attempts to create a quote from the given message and add it as an entry to the db
     
@@ -16,8 +27,6 @@ async def createQuote(message,db,quoteID = -1):
 
     returns bool, true if a quote is created
     """
-    if message.author.bot:
-        return False
     q = re.compile(r'(?:[\"“”])(?P<quote>.+)(?:[\"“”])(?:[\s-]*)(?P<quotee>.+?|$)(?:\s*)(?P<year>\d{4}$|$)')#regex that matches quote, quotee, and year 
 
     foundQuote = False
@@ -40,6 +49,29 @@ async def createQuote(message,db,quoteID = -1):
         await message.add_reaction("🔈")
 
     return foundQuote
+
+async def createClip(message, db, quoteID = -1):
+    for attach in message.attachments:
+        if attach.content_type.split('/')[0] != 'audio':
+            continue
+        print(attach)
+        if quoteID == -1:
+            quoteID = await getID(db,message.guild.id)
+        content = message.content + " " + attach.filename
+        quoteDict = {
+            'quote':content,
+            'quotee':'Unknown',
+            'year':None
+        }
+        audio = await saveClip(attach, quoteID, message.guild.id)
+        await dbEntry(message, quoteDict,quoteID,audio,db)
+    await message.add_reaction("🔈")
+    return True
+
+async def saveClip(attach,quoteID,serverID):
+    path = f"./Clips/{serverID}-{quoteID}-{attach.filename}"
+    await attach.save(path)
+    return path
 
 async def getID(db,serverID):
     """gets a new id to use for a quote and iterates the counter
@@ -245,9 +277,9 @@ async def updateQuote(message,db):
     quote = db.quotes.find_one({"msgID":message.id})
     if quote:
         db.quotes.delete_one({"msgID":message.id})
-        await createQuote(message,db,quoteID = quote["ID"])
+        await processMessage(message,db,quoteID = quote["ID"])
     else:
-        await createQuote(message,db)
+        await processMessage(message,db)
 
 async def getMessage(ctx,msgID,db):
     """gets message from msgID regardless of channel execution

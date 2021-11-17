@@ -2,6 +2,7 @@
 *~
 TOKEN
 Quotes/
+Clips/
 *.swp
 testCode.py
 clear.sh
