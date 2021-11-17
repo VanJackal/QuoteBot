@@ -81,7 +81,7 @@ async def leave(ctx):
     if vs:
         await vs.leave()
     else:
-        ctx.send('Not In A Voice Channel')
+        await ctx.send('Not In A Voice Channel')
 
 @bot.command()
 async def setchannel(ctx,numMsg = 500):
@@ -161,7 +161,7 @@ async def update(ctx, msgID):
     if message:
         await qbLib.updateQuote(message,db)
     else:
-        ctx.send("Invalid Message")
+        await ctx.send("Invalid Message")
 
 async def play(user,path):
     """active function that plays quotes"""
@@ -189,6 +189,24 @@ async def listchannels(ctx):
     for channel in channels:
         message += f"<#{channel}>\n"
     await ctx.send(message)
+
+@bot.command()
+async def queue(ctx):
+    vs = getVoiceSession(ctx.guild.id)
+    if vs:
+        qSize = vs.getQueueSize()
+        await ctx.send(f'There are `{qSize}` clips in the queue')
+    else:
+        await ctx.send('Not In A Voice Channel')
+
+@bot.command()
+async def clear(ctx):
+    vs = getVoiceSession(ctx.guild.id)
+    if vs:
+        vs.resetQueue()
+        await ctx.send('Queue Cleared')
+    else:
+        await ctx.send('Not In A Voice Channel')
 
 def getVoiceSession(guildID):
     if guildID in voiceSessions:
