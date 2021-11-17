@@ -31,6 +31,7 @@ async def on_ready():
 async def on_message(message):
     """on message check if the attempt to quote the message if its in a valid channel"""
     if qbLib.isQuoteChannel(message,db):
+        print(message.attachments)
         await qbLib.createQuote(message,db)
     await bot.process_commands(message)#create passive process for random quote status
 
@@ -60,7 +61,8 @@ async def on_raw_message_delete(data):
     """auto updates the deleted status of quotes"""
     if qbLib.isQuoteChannel(None,db,data.guild_id,data.channel_id):
         quoteEntry = db.quotes.find_one_and_delete({"msgID":data.message_id})
-        db.deleted.insert_one(quoteEntry)
+        if quoteEntry:
+            db.deleted.insert_one(quoteEntry)
 
 async def randomStatus():
     """set status to a random quote every hour (3600 seconds)"""
