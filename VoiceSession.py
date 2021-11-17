@@ -43,3 +43,9 @@ class VoiceSession:
         print(f'VoiceSession {self.guildID} Popped')
         self.q.join()
         self.t.join()
+    
+    def resetQueue(self):
+        self.q.queue.clear()
+    
+    def getQueueSize(self):
+        return self.q.qsize()
