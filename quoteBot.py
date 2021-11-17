@@ -77,8 +77,11 @@ async def say(ctx, quoteID: int):
 @bot.command()
 async def leave(ctx):
     """causes the bot to leave the channel"""
-    if ctx.guild.id in voiceSessions:
-        await voiceSessions[ctx.guild.id].leave()
+    vs = getVoiceSession(ctx.guild.id)
+    if vs:
+        await vs.leave()
+    else:
+        ctx.send('Not In A Voice Channel')
 
 @bot.command()
 async def setchannel(ctx,numMsg = 500):
@@ -162,16 +165,12 @@ async def update(ctx, msgID):
 
 async def play(user,path):
     """active function that plays quotes"""
-    #check for an active voice session in the guild
-    #if a session is found pass the play command to the session
-    #if the session is not found create a new session(from the guildid and channel) and pass the command
     gid = user.guild.id
+    vs = getVoiceSession(gid)# get voiceSession if it exists
     
-    if gid not in voiceSessions:
-        vs = await VoiceSession.createVoiceSession(gid,user.voice.channel,voiceSessions)
+    if not vs:#if the vs is not found
+        vs = await VoiceSession.createVoiceSession(gid,user.voice.channel,voiceSessions)#create a vs for the guild
         voiceSessions[gid] = vs
-    else:
-        vs = voiceSessions[gid]
     vs.add(path)
 
 @bot.command()
@@ -190,5 +189,11 @@ async def listchannels(ctx):
     for channel in channels:
         message += f"<#{channel}>\n"
     await ctx.send(message)
+
+def getVoiceSession(guildID):
+    if guildID in voiceSessions:
+        return voiceSessions[guildID]
+    else:
+        return None
 
 bot.run(TOKEN)
