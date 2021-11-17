@@ -1,6 +1,8 @@
 import discord
 import threading, queue
 
+QUEUE_TIMEOUT = 60
+
 async def createVoiceSession(guildID, channel, voiceSessions):
     vs = VoiceSession(guildID, voiceSessions)
     await vs._init(channel)
@@ -22,7 +24,7 @@ class VoiceSession:
     def player(self):
         while self.active and self.voiceClient.is_connected():
             try:
-                path = self.q.get(timeout=10)
+                path = self.q.get(timeout=QUEUE_TIMEOUT)
                 self.voiceClient.play(discord.FFmpegPCMAudio(path))
                 while self.voiceClient.is_playing() and self.active:
                     pass#TODO Change this (it be super hacky)
