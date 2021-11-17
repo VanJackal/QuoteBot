@@ -5,6 +5,7 @@ from discord.ext import commands
 
 import re
 import yaml
+import VoiceSession
 import quoteBotLib as qbLib
 import pymongo
 import random as rand
@@ -18,6 +19,8 @@ dbClient = pymongo.MongoClient(f"mongodb://{dbAddr}/")
 db = dbClient.quoteDB
 with open("TOKEN") as f:#loading discord bot token
     TOKEN = f.read()
+
+voiceSessions = {}
 
 @bot.event
 async def on_ready():
@@ -38,7 +41,7 @@ async def on_raw_reaction_add(payload):
     if not quote or str(payload.emoji) != "🔈" or bot.user.id == payload.user_id:
         return
     member = payload.member
-    await play(member.guild.voice_client,member,quote["file"])
+    await play(member,quote["file"])
     channel = payload.member.guild.get_channel(payload.channel_id)
     message = await channel.fetch_message(payload.message_id)
     await message.remove_reaction("🔈",member)
@@ -52,6 +55,13 @@ async def on_raw_message_edit(payload):
     if qbLib.isQuoteChannel(message,db):
         await qbLib.updateQuote(message,db)
 
+@bot.event
+async def on_raw_message_delete(data):
+    """auto updates the deleted status of quotes"""
+    if qbLib.isQuoteChannel(None,db,data.guild_id,data.channel_id):
+        quoteEntry = db.quotes.find_one_and_delete({"msgID":data.message_id})
+        db.deleted.insert_one(quoteEntry)
+
 async def randomStatus():
     """set status to a random quote every hour (3600 seconds)"""
     while True:
@@ -62,12 +72,16 @@ async def randomStatus():
 @bot.command()
 async def say(ctx, quoteID: int):
     """says quote with given id in message authors channel"""
-    await play(ctx.guild.voice_client,ctx.message.author,await qbLib.getPath(quoteID,ctx.guild.id,db))
+    await play(ctx.message.author,await qbLib.getPath(quoteID,ctx.guild.id,db))
 
 @bot.command()
 async def leave(ctx):
     """causes the bot to leave the channel"""
-    await ctx.voice_client.disconnect()
+    vs = getVoiceSession(ctx.guild.id)
+    if vs:
+        await vs.leave()
+    else:
+        await ctx.send('Not In A Voice Channel')
 
 @bot.command()
 async def setchannel(ctx,numMsg = 500):
@@ -110,18 +124,16 @@ async def search(ctx,*tags):
     await ctx.send(result)
 
 @bot.command()
-async def random(ctx):#TODO Rewrite to integrate with search functionality
+async def random(ctx):
     """plays random quote"""
-    idx = db.servers.find_one({"serverID":ctx.guild.id})["currentID"]
-    choiceID = rand.randrange(int(idx)) + 1
-    print(choiceID)
-    quoteObj = await qbLib.getQuote(int(choiceID),ctx.guild.id,db)
+    quoteObj = await qbLib.getRandomQuote(ctx,db)
     quote = quoteObj["quote"]
     quotee = quoteObj["quotee"]
     year = quoteObj["year"]
-    await ctx.send(f"Playing quote #{choiceID}:\n||\"{quote}\" - {quotee} {year}||")
+    quoteID = quoteObj["ID"]
+    await ctx.send(f"Playing quote #{quoteID}:\n||\"{quote}\" - {quotee} {year}||")
     path = quoteObj["file"]
-    await play(ctx.guild.voice_client,ctx.message.author,path)
+    await play(ctx.message.author,path)
     
 @bot.command()
 async def updatemany(ctx, numMsg = 500):
@@ -149,13 +161,17 @@ async def update(ctx, msgID):
     if message:
         await qbLib.updateQuote(message,db)
     else:
-        ctx.send("Invalid Message")
+        await ctx.send("Invalid Message")
 
-async def play(vc,user,path):
+async def play(user,path):
     """active function that plays quotes"""
-    if not vc:#if bot isnt in a voice channel join authors channel
-        vc = await user.voice.channel.connect()
-    vc.play(discord.FFmpegPCMAudio(path))
+    gid = user.guild.id
+    vs = getVoiceSession(gid)# get voiceSession if it exists
+    
+    if not vs:#if the vs is not found
+        vs = await VoiceSession.createVoiceSession(gid,user.voice.channel,voiceSessions)#create a vs for the guild
+        voiceSessions[gid] = vs
+    vs.add(path)
 
 @bot.command()
 async def setup(ctx):
@@ -173,5 +189,29 @@ async def listchannels(ctx):
     for channel in channels:
         message += f"<#{channel}>\n"
     await ctx.send(message)
+
+@bot.command()
+async def queue(ctx):
+    vs = getVoiceSession(ctx.guild.id)
+    if vs:
+        qSize = vs.getQueueSize()
+        await ctx.send(f'There are `{qSize}` clips in the queue')
+    else:
+        await ctx.send('Not In A Voice Channel')
+
+@bot.command()
+async def clear(ctx):
+    vs = getVoiceSession(ctx.guild.id)
+    if vs:
+        vs.resetQueue()
+        await ctx.send('Queue Cleared')
+    else:
+        await ctx.send('Not In A Voice Channel')
+
+def getVoiceSession(guildID):
+    if guildID in voiceSessions:
+        return voiceSessions[guildID]
+    else:
+        return None
 
 bot.run(TOKEN)

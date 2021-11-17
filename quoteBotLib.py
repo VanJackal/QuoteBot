@@ -29,7 +29,7 @@ async def createQuote(message,db,quoteID = -1):
                 quoteID = await getID(db,message.guild.id)
             quoteDict = match.groupdict()
             if not quoteDict["quotee"]:#if the quote isnt credited to an author set it to "Cheesy Proverb"
-                quoteDict["quotee"] = "Cheesy Proverb"
+                quoteDict["quotee"] = "Unknown"
             audio = await speakQuote(quoteDict,quoteID,message.guild.id)
             await dbEntry(message,quoteDict,quoteID,audio,db)
             foundQuote = True
@@ -179,7 +179,7 @@ async def updateMany(ctx,db,numMsg=500):
     async for message in ctx.channel.history(limit=numMsg):
         await updateQuote(message,db)
 
-def isQuoteChannel(message,db):
+def isQuoteChannel(message,db,guildID='',channelID=''):
     """checks if message channel is in the list of channels in the server entry
 
     args:
@@ -188,11 +188,15 @@ def isQuoteChannel(message,db):
 
     returns -- bool true if channel is in list of quote channels"""
 
-    server = db.servers.find_one({"serverID":message.guild.id})
+    if(message and not (channelID and guildID)):
+        guildID = message.guild.id
+        channelID = message.channel.id
+
+    server = db.servers.find_one({"serverID":guildID})
     if not server:
         return False
     quoteChannels = map(int,server["channels"])
-    return message.channel.id in quoteChannels
+    return channelID in quoteChannels
 
 async def search(tags,serverID,db):
     """search database with given tags
@@ -263,3 +267,10 @@ async def getMessage(ctx,msgID,db):
             return message
         except discord.errors.NotFound:
             pass
+
+async def getRandomQuote(ctx,db):
+    """
+    returns a random quote object from the server context
+    """
+    quote = db.quotes.aggregate([{'$match':{'serverID':ctx.guild.id}},{'$sample':{'size':1}}])
+    return quote.next()
