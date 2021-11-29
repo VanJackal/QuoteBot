@@ -1,9 +1,9 @@
 import discord
-import threading, queue
+import queue
 import asyncio
 
-QUEUE_TIMEOUT = 3
-SESSION_TIMEOUT_LIMIT = 0
+QUEUE_TIMEOUT = 60
+SESSION_TIMEOUT_LIMIT = 5 # 5 x 60 second timeouts = 5min
 
 async def createVoiceSession(guildID, channel, voiceSessions):
     vs = VoiceSession(channel, guildID,  voiceSessions)
@@ -35,9 +35,7 @@ class VoiceSession:
             except(queue.Empty):
                 self.timeoutCounter += 1
                 print(f'Queue Timeout in {self.guildID}')
-            if not self.voiceClient.is_connected():
-                self.endSession()
-            elif self.timeoutCounter > SESSION_TIMEOUT_LIMIT:
+            if (not self.voiceClient.is_connected()) or self.timeoutCounter > SESSION_TIMEOUT_LIMIT:
                 await self.leave()
                 break
         print(f'VoiceSession {self.guildID} Closed')
@@ -46,18 +44,13 @@ class VoiceSession:
         self.q.put(path)
     
     async def leave(self):
-        print(f'VoiceSession {self.guildID} Closing')
-        self.voiceClient.pause()
         self.active = False
-        await self.voiceClient.disconnect()
-        self.endSession()
-    
-    def endSession(self):
+        print(f'VoiceSession {self.guildID} Closing')
+        if self.voiceClient.is_connected():
+            self.voiceClient.pause()
+            await self.voiceClient.disconnect()
         self.voiceSessions.pop(self.guildID)
         print(f'VoiceSession {self.guildID} Popped')
-        #self.q.join()#TODO remove before commit
-        #self.t.join()
-        #print(f'Thread for {self.guildID} Joined')#I dont think these are needed (they are pointlessly just waiting)
     
     def resetQueue(self):
         self.q.queue.clear()
