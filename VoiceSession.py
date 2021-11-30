@@ -22,20 +22,22 @@ class VoiceSession:
     
     async def _init(self,channel):
         self.voiceClient = await channel.connect()
-        self.loop.create_task(self.player())
+        self.loop.create_task(self.player())#start worker loop
 
     async def player(self):
         while self.active and self.voiceClient.is_connected():
             try:
                 path = self.q.get(timeout=QUEUE_TIMEOUT)
                 self.voiceClient.play(discord.FFmpegPCMAudio(path))
+                if self.voiceClient.is_playing():
+                    self.timeoutCounter = 0# reset timeout count
                 while self.voiceClient.is_playing() and self.active:
                     pass#TODO Change this (it be super hacky)
                 self.q.task_done()
             except(queue.Empty):
-                self.timeoutCounter += 1
+                self.timeoutCounter += 1# increment count of timeouts
                 print(f'Queue Timeout in {self.guildID}')
-            if (not self.voiceClient.is_connected()) or self.timeoutCounter > SESSION_TIMEOUT_LIMIT:
+            if (not self.voiceClient.is_connected()) or self.timeoutCounter > SESSION_TIMEOUT_LIMIT:# if the voice client isnt connected or the session has timed out
                 await self.leave()
                 break
         print(f'VoiceSession {self.guildID} Closed')
@@ -46,10 +48,10 @@ class VoiceSession:
     async def leave(self):
         self.active = False
         print(f'VoiceSession {self.guildID} Closing')
-        if self.voiceClient.is_connected():
+        if self.voiceClient.is_connected():#leave the voice channel if connected
             self.voiceClient.pause()
             await self.voiceClient.disconnect()
-        self.voiceSessions.pop(self.guildID)
+        self.voiceSessions.pop(self.guildID)#remove the session from the list of sessions
         print(f'VoiceSession {self.guildID} Popped')
     
     def resetQueue(self):
